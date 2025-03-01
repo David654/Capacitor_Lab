@@ -4,8 +4,9 @@ import pandas as pd
 
 
 class Graph:
-    def __init__(self, directory):
+    def __init__(self, directory, save_directory):
         self.directory = directory
+        self.save_directory = save_directory
 
     def get_file_data(self, file_name, separator=','):
         """
@@ -42,7 +43,7 @@ class Graph:
 
         return data, len(file_data.columns) // 2
 
-    def plot_graph(self, file_name, title="Graph", x_axis_name='x', y_axis_name='y', graph_size=5, show_fit=True):
+    def plot_graph(self, file_name, save_file_name, title="Graph", x_axis_name='x', y_axis_name='y', graph_size=5, show_fit=True):
 
         """
         Plots scatter graphs with optional linear fits from a data file.
@@ -96,10 +97,11 @@ class Graph:
                 axis[i].plot(x_fit, y_fit, color='red', linewidth=2)
                 print(f'Slope {i + 1}: {fit_coeff}')
 
-        plt.suptitle(title)
+        plt.suptitle(title, fontweight='bold')
+        plt.savefig(self.save_directory + save_file_name + '.eps', dpi=600)
         plt.show()
 
 
-graph = Graph('E:/Works/Lab Reports/reports/capacitor/data/')
-graph.plot_graph('VQ2_exp2.csv', 'Plate distance of 4 mm', x_axis_name='Number of charges applied',
+graph = Graph('E:/Works/Lab Reports/reports/capacitor/data/', 'E:/Works/Lab Reports/reports/capacitor/graphs/')
+graph.plot_graph('VQ1_exp1.csv', 'exp_1_2mm', 'Plate distance of 2 mm', x_axis_name='Number of charges applied',
                  y_axis_name='Voltage (V)')
