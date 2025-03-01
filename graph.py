@@ -91,11 +91,10 @@ class Graph:
 
             if show_fit:
                 x_fit = np.linspace(0, max(x), 100)
-                fit_coeffs = np.polyfit(x, y, 1)
-                y_fit = x_fit * fit_coeffs[0] + fit_coeffs[1]
+                fit_coeff = np.linalg.lstsq(x.reshape(-1, 1), y)[0][0]
+                y_fit = x_fit * fit_coeff
                 axis[i].plot(x_fit, y_fit, color='red', linewidth=2)
-                print(f'Slope {i + 1}: {y_fit[0]}')
-                print(f'Bias {i + 1}: {y_fit[1]}')
+                print(f'Slope {i + 1}: {fit_coeff}')
 
         plt.suptitle(title)
         plt.show()
