@@ -7,6 +7,10 @@ class Graph:
     def __init__(self, directory, save_directory):
         self.directory = directory
         self.save_directory = save_directory
+        self.transform_data = lambda x, y: y
+
+    def set_data_transform_func(self, func):
+        self.transform_data = func
 
     def get_file_data(self, file_name, separator=','):
         """
@@ -43,7 +47,8 @@ class Graph:
 
         return data, len(file_data.columns) // 2
 
-    def plot_graph(self, file_name, save_file_name, title="Graph", x_axis_name='x', y_axis_name='y', graph_size=5, show_fit=True):
+    def plot(self, file_name, save_file_name, title="Graph", x_axis_name='x', y_axis_name='y', graph_size=5,
+                   show_fit=True, polynom_degree=1):
 
         """
         Plots scatter graphs with optional linear fits from a data file.
@@ -62,7 +67,9 @@ class Graph:
         :param float graph_size:
             Size of each subplot in inches (default: 5).
         :param bool show_fit:
-            Whether to display a linear fit for each dataset (default: True).
+            Whether to display a fit line for each dataset (default: True).
+        :param int polynom_degree:
+            Maximum degree of a fitting polynomial.
 
         :return:
             Displays a Matplotlib figure with multiple subplots.
@@ -83,6 +90,8 @@ class Graph:
             x = data[0][i * 2::2 * data[1]]
             y = data[0][i * 2 + 1::2 * data[1]]
 
+            y = self.transform_data(x, y)
+
             axis[i].scatter(x, y, color='black', linewidth=0.1)
             axis[i].set_xlabel(x_axis_name)
             axis[i].set_ylabel(y_axis_name)
@@ -92,16 +101,33 @@ class Graph:
 
             if show_fit:
                 x_fit = np.linspace(0, max(x), 100)
-                fit_coeff = np.linalg.lstsq(x.reshape(-1, 1), y)[0][0]
-                y_fit = x_fit * fit_coeff
+                y_fit = np.zeros(100)
+                fit_coeff = np.zeros(polynom_degree + 1)
+
+                if polynom_degree == 1:
+                    linear_coeff = np.linalg.lstsq(x.reshape(-1, 1), y)[0][0]
+                    fit_coeff[0] = linear_coeff
+
+                else:
+                    fit_coeff = np.polyfit(x, y, 2)
+
+                for j in range(0, polynom_degree + 1):
+                    print(fit_coeff[-j - 1])
+                    y_fit += fit_coeff[-j - 1] * x_fit ** j
+
                 axis[i].plot(x_fit, y_fit, color='red', linewidth=2)
                 print(f'Slope {i + 1}: {fit_coeff}')
 
         plt.suptitle(title, fontweight='bold')
-        plt.savefig(self.save_directory + save_file_name + '.eps', dpi=600)
+        # plt.savefig(self.save_directory + save_file_name + '.eps', dpi=600)
         plt.show()
 
 
 graph = Graph('E:/Works/Lab Reports/reports/capacitor/data/', 'E:/Works/Lab Reports/reports/capacitor/graphs/')
-graph.plot_graph('VQ1_exp1.csv', 'exp_1_2mm', 'Plate distance of 2 mm', x_axis_name='Number of charges applied',
-                 y_axis_name='Voltage (V)')
+
+d = 0.01
+e0 = 8.85418782e-12
+
+graph.set_data_transform_func(lambda x, y: y * 0.01 * x ** 2 * np.pi * e0 / d * 10e9)
+graph.plot('VR1_exp2.csv', 'exp_2', 'Charge density', x_axis_name='Distance from the center of the plate (cm)',
+                 y_axis_name='Charge (nC)', polynom_degree=2)
